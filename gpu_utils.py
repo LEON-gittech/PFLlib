@@ -38,7 +38,7 @@ def is_available():
     total, used, free = get_gpu_mem_info()
     gpu_percent = free/total
     mem_percent = mem_free/mem_total
-    if mem_percent <= 0.15 or gpu_percent <= 0.15:
+    if mem_percent <= 0.15 or gpu_percent <= 0.95:
         return False
     else: return True
 
