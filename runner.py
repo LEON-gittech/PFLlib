@@ -30,10 +30,9 @@ class ProgramInstance:
         proc = subprocess.Popen(self.command, shell=True, stdout=subprocess.PIPE)
         time.sleep(30)  # 估计程序启动时间
         print(self.command+"'s process id is:", proc.pid)
-        tmp = is_available()
         if not is_available():
             os.kill(proc.pid, signal.SIGINT)
-            print("当前内存或显存占用过高，撤销运行"+self.comman)
+            print("当前内存或显存占用过高，撤销运行"+self.command)
             self.status = ProgramStatus.NOT_RUN
         else:
             self.proc = proc
@@ -62,12 +61,8 @@ class Launcher:
                 except Exception as e:
                     print(str(e))
             
-            if not self.waiting_queue and all(p.status == ProgramStatus.FINISHED for p in self.running_queue):
-                print("All programs have finished running.")
-                break
-            elif all(p.status in (ProgramStatus.FINISHED, ProgramStatus.FAILED) for p in self.running_queue):
-                print("Some programs failed but all have stopped running.")
-                break
+            if len(self.waiting_queue)==0 and len(self.running_queue)==0:
+                print("所有任务运行完成")
 
             # 更新进程状态
             need_del = []
@@ -90,25 +85,25 @@ class Launcher:
                 time.sleep(5)
                 pass
             else:
-                time.sleep(300)  #基本上一个批次在半个小时左右，但这里以 5 分钟为单位进行轮询
+                time.sleep(5)  #基本上一个批次在半个小时左右，但这里以 5 分钟 (300)为单位进行轮询
 
 # orders不要加nohup！！！否则无法追踪子进程
 orders = [
-    "-u main.py -data Cifar10 -m cnn -algo FedProx -gr 2 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 -mu 0.001 > cifar10_fedProx_dir.out",
-    "-u main.py -data Cifar10 -m cnn -algo FedFomo -gr 2 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 -M 5 > cifar10_fedFomo_dir.out 2>&1 &",
-    "-u main.py -data Cifar10 -m cnn -algo Ditto -gr 2 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 > cifar10_ditto_dir.out 2>&1 &",
-    "-u main.py -data Cifar10 -m cnn -algo FedALA -gr 2 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 > cifar10_FedALA_dir.out 2>&1 &",
-    "-u main.py -data Cifar10 -m cnn -algo GPFL -gr 2 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 > cifar10_GPFL_dir.out 2>&1 &",
-    "-u main.py -data Cifar10 -m cnn -algo FedPAC -gr 2 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 > cifar10_FedPAC_dir.out 2>&1 &",
-    "-u main.py -data Cifar10 -m cnn -algo MOON -gr 2 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 > cifar10_MOON_dir.out 2>&1 &",
-    "-u main.py -data Cifar10 -m cnn -algo FedAvg -gr 2 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 > cifar10_FedAvg_dir.out 2>&1 &",
-    "-u main.py -data Cifar10 -m cnn -algo pFedMe -gr 2 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -bt 1 -lam 15 -ls 5 --partition pat > cifar10_pFedMe_pat.out 2>&1 &",
-    "-u main.py -data Cifar10 -m cnn -algo FedProx -gr 2 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 -mu 0.001 --partition pat > cifar10_fedProx_pat.out 2>&1 &",
-    "-u main.py -data Cifar10 -m cnn -algo FedFomo -gr 2 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 -M 5 --partition pat > cifar10_fedFomo_pat.out 2>&1 &",
-    "-u main.py -data Cifar10 -m cnn -algo Ditto -gr 2 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 --partition pat > cifar10_ditto_pat.out 2>&1 &",
-    "-u main.py -data Cifar10 -m cnn -algo FedALA -gr 2 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 --partition pat > cifar10_FedALA_pat.out 2>&1 &",
-    "-u main.py -data Cifar10 -m cnn -algo GPFL -gr 2 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 --partition pat  > cifar10_GPFL_pat.out 2>&1 &",
-    "-u main.py -data Cifar10 -m cnn -algo FedPAC -gr 2 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 --partition pat > cifar10_FedPAC_pat.out 2>&1 &"
+    "-u main.py -data Cifar10 -m cnn -algo FedProx -gr 10 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 -mu 0.001 > cifar10_fedProx_dir.out",
+    "-u main.py -data Cifar10 -m cnn -algo FedFomo -gr 20 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 -M 5 > cifar10_fedFomo_dir.out 2>&1 &",
+    "-u main.py -data Cifar10 -m cnn -algo Ditto -gr 20 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 > cifar10_ditto_dir.out 2>&1 &",
+    "-u main.py -data Cifar10 -m cnn -algo FedALA -gr 20 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 > cifar10_FedALA_dir.out 2>&1 &",
+    "-u main.py -data Cifar10 -m cnn -algo GPFL -gr 20 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 > cifar10_GPFL_dir.out 2>&1 &",
+    "-u main.py -data Cifar10 -m cnn -algo FedPAC -gr 20 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 > cifar10_FedPAC_dir.out 2>&1 &",
+    "-u main.py -data Cifar10 -m cnn -algo MOON -gr 20 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 > cifar10_MOON_dir.out 2>&1 &",
+    "-u main.py -data Cifar10 -m cnn -algo FedAvg -gr 20 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 > cifar10_FedAvg_dir.out 2>&1 &",
+    "-u main.py -data Cifar10 -m cnn -algo pFedMe -gr 20 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -bt 1 -lam 15 -ls 5 --partition pat > cifar10_pFedMe_pat.out 2>&1 &",
+    "-u main.py -data Cifar10 -m cnn -algo FedProx -gr 20 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 -mu 0.001 --partition pat > cifar10_fedProx_pat.out 2>&1 &",
+    "-u main.py -data Cifar10 -m cnn -algo FedFomo -gr 20 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 -M 5 --partition pat > cifar10_fedFomo_pat.out 2>&1 &",
+    "-u main.py -data Cifar10 -m cnn -algo Ditto -gr 20 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 --partition pat > cifar10_ditto_pat.out 2>&1 &",
+    "-u main.py -data Cifar10 -m cnn -algo FedALA -gr 20 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 --partition pat > cifar10_FedALA_pat.out 2>&1 &",
+    "-u main.py -data Cifar10 -m cnn -algo GPFL -gr 20 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 --partition pat  > cifar10_GPFL_pat.out 2>&1 &",
+    "-u main.py -data Cifar10 -m cnn -algo FedPAC -gr 20 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 --partition pat > cifar10_FedPAC_pat.out 2>&1 &"
 ]
 # Example usage
 if __name__ == "__main__":

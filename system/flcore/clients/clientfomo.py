@@ -80,7 +80,8 @@ class clientFomo(Client):
         if batch_size == None:
             batch_size = self.batch_size
         train_data = read_client_data(self.dataset, self.id, is_train=True)
-        val_idx = -int(self.val_ratio*len(train_data))
+        # val_idx = -int(self.val_ratio*len(train_data))
+        val_idx = -int(0.2*len(train_data))
         val_data = train_data[val_idx:]
         train_data = train_data[:val_idx]
 
