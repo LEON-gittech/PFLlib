@@ -274,8 +274,9 @@ class ResNetwithLowPrototype(ResNet):
             if i==0: low_embedding = x
 
         x = self.avgpool(x)
+        high_embedding = x
         x = self.fc(x)
-        return [low_embedding, x]
+        return [low_embedding, high_embedding, x]
 
 class ResNetCon(ResNet):
     def __init__(self,block: BasicBlock, layers: List[int], feature_dim: int=128 ,features: List[int] = [64, 128, 256, 512], num_classes: int = 1000, zero_init_residual: bool = False, groups: int = 1, width_per_group: int = 64, replace_stride_with_dilation: List[bool] or None = None, norm_layer: Callable[..., Module] or None = None, has_bn=True, bn_block_num=4) -> None:

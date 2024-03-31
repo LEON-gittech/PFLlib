@@ -274,6 +274,7 @@ def run(args, dataset_path = None):
             args.model.fc = nn.Identity()
             args.model = BaseHeadSplit(args.model, args.head)
             server = FedAvgDBE(args, i)
+            
         elif args.algorithm == "pFedCon":
             server = pFedCon(args, i)
         elif args.algorithm == "pFedConSingle":
