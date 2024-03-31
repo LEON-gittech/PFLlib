@@ -39,7 +39,9 @@ def get_model(args, vocab_size = 98635, max_len=200, emb_dim=32):
             return DNN(60, 20, num_classes=args.num_classes).to(args.device)
     
     elif model_str == "resnet":
-        return torchvision.models.resnet18(pretrained=False, num_classes=args.num_classes).to(args.device)
+        if args.algorithm == "FedPCL": return resnet18_low(num_classes=args.num_classes, has_bn=True, bn_block_num=4).to(args.device)
+        # return torchvision.models.resnet18(pretrained=False, num_classes=args.num_classes).to(args.device)
+        else: return resnet18(num_classes=args.num_classes, has_bn=True, bn_block_num=4).to(args.device)
         
         # args.model = torchvision.models.resnet18(pretrained=True).to(args.device)
         # feature_dim = list(args.model.fc.parameters())[0].shape[1]

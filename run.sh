@@ -29,8 +29,8 @@
 # # # # dir FedAvg cifar10
 # nohup python -u main.py -data Cifar10 -m cnn -algo FedAvg -gr 100 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 > cifar10_FedAvg_dir.out 2>&1 &
 
-nohup python -u main.py -data Cifar10 -m resnet_con -algo pFedCon -gr 100 -did 0 -go resnet_con -lbs 64 -nc 10 -jr 1 -nb 10 -ls 1 -pls 4 --is_con 1 > cifar10_DittoCon_dir.out 2>&1 &
-nohup python -u main.py -data Cifar10 -m resnet_con -algo pFedConSingle -gr 100 -did 0 -go resnet_con -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 --is_con 1 > cifar10_pFedConSingle_dir.out 2>&1 &
+# nohup python -u main.py -data Cifar10 -m resnet_con -algo pFedCon -gr 100 -did 0 -go resnet_con -lbs 64 -nc 10 -jr 1 -nb 10 -ls 1 -pls 4 --is_con 1 > cifar10_DittoCon_dir.out 2>&1 &
+# nohup python -u main.py -data Cifar10 -m resnet_con -algo pFedConSingle -gr 100 -did 0 -go resnet_con -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 --is_con 1 > cifar10_pFedConSingle_dir.out 2>&1 &
 
 # ## pat
 # # pat pFedMe cifar10
@@ -414,5 +414,6 @@ nohup python -u main.py -data Cifar10 -m resnet_con -algo pFedConSingle -gr 100 
 # # # dir FedAvg cifar10
 # nohup python -u main.py -data Cifar10 -m cnn -algo FedAvg -gr 100 -did 1 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5 --niid_alpha 1 > cifar10_FedAvg_dir_1.out 2>&1 &
 
-
+# ===============================================================PCL 验证================================================================
+python -u main.py -data Cifar10 -m resnet -algo FedPCL -gr 100 -did 0 -go cnn -lbs 64 -nc 10 -jr 1 -nb 10 -ls 5
 

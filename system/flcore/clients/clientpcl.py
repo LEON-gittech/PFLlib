@@ -109,7 +109,7 @@ class clientPCL(Client):
         self.global_protos = global_protos
         self.client_protos_set = client_protos_set
 
-    def collect_protos(self):
+    def collect_protos(self): #第一轮的时候会先收集 protos，也就是进行初始化
         trainloader = self.load_train_data()
         self.model.eval()
 
@@ -124,12 +124,37 @@ class clientPCL(Client):
                 if self.train_slow:
                     time.sleep(0.1 * np.abs(np.random.rand()))
                 rep = self.model(x)
-                rep = F.normalize(rep, dim=1)
+                rep = F.normalize(rep, dim=1) #[batch, dim(512，对于resnet18)]
 
                 for i, yy in enumerate(y):
                     y_c = yy.item()
                     protos[y_c].append(rep[i, :].detach().data)
 
+        self.protos = agg_func(protos)
+    
+    def collect_high_low_protos(self):
+        trainloader = self.load_train_data()
+        self.model.eval()
+
+        protos = defaultdict(list)
+        low_protos = defaultdict(list)
+        with torch.no_grad():
+            for i, (x, y) in enumerate(trainloader):
+                if type(x) == type([]):
+                    x[0] = x[0].to(self.device)
+                else:
+                    x = x.to(self.device)
+                y = y.to(self.device)
+                if self.train_slow:
+                    time.sleep(0.1 * np.abs(np.random.rand()))
+                low, rep = self.model(x)
+                rep = F.normalize(rep, dim=1) #[batch, dim(512，对于resnet18)]
+                low = F.normalize(low, dim=1)
+                for i, yy in enumerate(y):
+                    y_c = yy.item()
+                    protos[y_c].append(rep[i, :].detach().data)
+                    low_protos[y_c].append(low[i, :].detach().data)
+                
         self.protos = agg_func(protos)
 
     def test_metrics(self, model=None):
@@ -228,6 +253,11 @@ def agg_func(protos):
                 proto += i.data
             protos[label] = proto / len(proto_list)
         else:
-            protos[label] = proto_list[0]
+            protos[label] = proto_list[0] #只有一个，不需要平均了
 
-    return protos
+    return protos #不一定包含所有种类
+
+def save_embedding(protos, is_high=True):
+    protos = torch.tensor(protos)
+    if is_high: protos.save("high.pt")
+    else: protos.save("low.pt")
