@@ -4,6 +4,8 @@ import torch.nn as nn
 from typing import Type, Any, Callable, Union, List, Optional
 import torch.nn.functional as F
 from torch.nn import Module
+import copy
+import math
 
 def conv3x3(in_planes: int, out_planes: int, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv2d:
     """3x3 convolution with padding"""
@@ -277,6 +279,36 @@ class ResNetwithLowPrototype(ResNet):
         high_embedding = x
         x = self.fc(x)
         return [low_embedding, high_embedding, x]
+
+class ResNetAttention(ResNet):
+    def __init__(self, block: BasicBlock, layers: List[int], features: List[int] = [64, 128, 256, 512], num_classes: int = 1000, zero_init_residual: bool = False, groups: int = 1, width_per_group: int = 64, replace_stride_with_dilation: Optional[List[bool]] = None, norm_layer: Optional[Callable[..., nn.Module]] = None, has_bn=True, bn_block_num=4, d_model=8, dropout=0.5) -> None:
+        super().__init__(block, layers, features, num_classes, zero_init_residual, groups, width_per_group, replace_stride_with_dilation, norm_layer, has_bn, bn_block_num)
+        self.linears = self.clones(nn.Linear(d_model, d_model), 3)
+        self.dropout = nn.Dropout(p=dropout)
+
+    def clones(self, module, N):
+        "Produce N identical layers."
+        return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
+
+    def attention(self, input):
+        nbatches = input.shape[0]
+        query, key, value = [
+            lin(x).view(nbatches, -1, self.h, self.d_k).transpose(1, 2)
+            for lin, x in zip(self.linears, (query, key, value))
+        ]
+        d_k = query.size(-1)
+        tmp = key.transpose(-2, -1)
+        scores = torch.matmul(query, tmp) / math.sqrt(d_k)
+        p_attn = scores.softmax(dim=-1)
+        if self.dropout is not None:
+            p_attn = self.dropout(p_attn)
+        return torch.matmul(p_attn, value), p_attn
+    
+    def get_generalized_prototype(self):
+        for i in range(len(self.layers)):
+            layer = getattr(self, f'layer_{i}')
+            
+    
 
 class ResNetCon(ResNet):
     def __init__(self,block: BasicBlock, layers: List[int], feature_dim: int=128 ,features: List[int] = [64, 128, 256, 512], num_classes: int = 1000, zero_init_residual: bool = False, groups: int = 1, width_per_group: int = 64, replace_stride_with_dilation: List[bool] or None = None, norm_layer: Callable[..., Module] or None = None, has_bn=True, bn_block_num=4) -> None:
