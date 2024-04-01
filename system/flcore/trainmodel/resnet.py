@@ -280,6 +280,22 @@ class ResNetwithLowPrototype(ResNet):
         x = self.fc(x)
         return [low_embedding, high_embedding, x]
 
+class ResNetwithEachLayer(ResNet):
+    def _forward_impl(self, x: Tensor) -> List[Tensor]: #这里返回两个，低维 embedding 和高维 embedding
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+        embeddings = []
+        for i in range(len(self.layers)):
+            layer = getattr(self, f'layer_{i}')
+            x = layer(x)
+            embeddings.append(x)
+
+        x = self.avgpool(x)
+        x = self.fc(x)
+        return (embeddings, x)
+
 class ResNetAttention(ResNet):
     def __init__(self, block: BasicBlock, layers: List[int], features: List[int] = [64, 128, 256, 512], num_classes: int = 1000, zero_init_residual: bool = False, groups: int = 1, width_per_group: int = 64, replace_stride_with_dilation: Optional[List[bool]] = None, norm_layer: Optional[Callable[..., nn.Module]] = None, has_bn=True, bn_block_num=4, d_model=8, dropout=0.5) -> None:
         super().__init__(block, layers, features, num_classes, zero_init_residual, groups, width_per_group, replace_stride_with_dilation, norm_layer, has_bn, bn_block_num)
@@ -353,6 +369,9 @@ def resnet18(**kwargs: Any) -> ResNet: # 18 = 2 + 2 * (2 + 2 + 2 + 2)
 
 def resnet18_low(**kwargs: Any) -> ResNet:
     return ResNetwithLowPrototype(BasicBlock, [2, 2, 2, 2], **kwargs)
+
+def resnet18_each_layer(**kwargs: Any) -> ResNet:
+    return ResNetwithEachLayer(BasicBlock, [2, 2, 2, 2], **kwargs)
 
 def resnet10(**kwargs: Any) -> ResNet: # 10 = 2 + 2 * (1 + 1 + 1 + 1)
     return ResNet(BasicBlock, [1, 1, 1, 1], **kwargs)
